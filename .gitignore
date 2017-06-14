@@ -1,2 +1,7 @@
 .DS_Store
 __pycache__/
+*.jpg
+*.jpeg
+*.png
+*.gif
+!lane.jpg
