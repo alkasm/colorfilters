@@ -13,7 +13,7 @@ Python scripts to quickly test colorspace thresholding values on color images.
 ## use
 The script `cspaceSliders.py` is the main script to include and use for your own images. Simply `import cspaceSliders` in your script and pass your `image` into the provided function `cspaceSliders.display(image)`. This function gives four outputs: the thresholded image, the colorspace used for thresholding, and the lower bounds and upper bounds of the thresholding operation. The full use line would be `binary_image, colorspace, lower_bound, upper_bound = cspaceSliders.display(image)`.
 
-The keys `[q]` and `[esc]` will close the window with sliders and will send the output through to your variables.
+The keys <kbd>q</kbd> and <kbd>esc</kbd> will close the window with sliders and will send the output through to your variables.
 
 The script `cspaceThreshImg.py` is simply used as a subroutine for `cspaceSliders.py` and simply contains functions to threshold the image in different colorspaces and modify the slider values into the proper ranges for that colorspace.
 
