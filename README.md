@@ -13,12 +13,12 @@ Python scripts to quickly test colorspace thresholding values on color images.
 ## use
 The script `cspaceSliders.py` is the main script to include and use for your own images. Simply `import cspaceSliders` in your script and pass your `image` into the provided function `cspaceSliders.display(image)`. This function gives four outputs: the thresholded image, the colorspace used for thresholding, and the lower bounds and upper bounds of the thresholding operation. The full use line would be `binary_image, colorspace, lower_bound, upper_bound = cspaceSliders.display(image)`.
 
-The keys `[q]` and `[esc]` will close the window with sliders and will send the output through to your variables.
+The keys <kbd>q</kbd> and <kbd>esc</kbd> will close the window with sliders and will send the output through to your variables.
 
 The script `cspaceThreshImg.py` is simply used as a subroutine for `cspaceSliders.py` and simply contains functions to threshold the image in different colorspaces and modify the slider values into the proper ranges for that colorspace.
 
 ## web app
-With another friend, I am currently developing a web application to do the same thing but through your browser (locally as well as on the internet) for a nicer interface and easy use for all who might not be using Python. Additionally trackbars sometimes get placed in a weird order (see known issues below), so the slider script could be annoying to use. Finally, OpenCV does not have a robust UI at all---it only has the bare minimum. The web app will enable much better interactivity. You can check out the current status of the web repo [here](https://github.com/alkasm/cspaceThreshWeb).
+With another friend, I am currently developing a web application to do the same thing but through your browser (locally as well as on the internet) for a nicer interface and easy use for all who might not be using Python. Additionally trackbars sometimes get placed in a weird order (see known issues below), so the slider script could be annoying to use. Finally, OpenCV does not have a robust UI at all---it only has the bare minimum. The web app will enable much better interactivity. You can check out the current working version [here](https://alkasm.github.io/cspaceFilter/). The interface isn't finished yet, but it works.
 
 ## known issues
 Depending on your build of OpenCV, the sliders (trackbars) get placed in a weird order. This is a [known bug](https://github.com/opencv/opencv/issues/5056). For those with the issue, ordering of them is somehow dependant on their name. I've added a couple spaces to some of my trackbar names to get them in a satisfactory order on my machine---I have no idea if others with this issue will have them in my same order or not. If not, at least the trackbars are labeled.
