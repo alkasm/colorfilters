@@ -1,8 +1,8 @@
-## cspaceThresh
-Python scripts to quickly test colorspace thresholding values on color images.
+## cspaceFilter
+Python module to quickly test colorspace thresholding values on color images.
 
 ## files
-    .gitignore          ignore all images other than the example  `lane.jpg`
+    .gitignore          ignore all images other than the example `lane.jpg`
     LICENSE             MIT License
     README.md           this file
     cspaceSliders.py    module containing FilterWindow class that displays the thresholded image with sliders
