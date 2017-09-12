@@ -1,198 +1,199 @@
-import argparse
 import cv2
 import numpy as np
-import cspaceThreshImg
-
-
-"""Globals"""
-
-
-# variable
-redisplay = False
+import uuid  # for unique filenames
 
 # constants
-CSPACE_LABELS = ['BGR', 'HSV', 'HLS', 'Lab', 'Luv', 'YCrCb', 'XYZ', 'Gray']
-STROKE_FONT = ((5, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, [255, 255, 255], 5)
-LABEL_FONT = ((5, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, [0, 0, 0], 2)
+CSPACE_LABELS = ['BGR', 'HSV', 'HLS', 'Lab',
+                 'Luv', 'YCrCb', 'XYZ', 'Grayscale']
+CONVERT_CODES = {'HSV': cv2.COLOR_BGR2HSV, 'HLS': cv2.COLOR_BGR2HLS,
+                 'Lab': cv2.COLOR_BGR2Lab, 'Luv': cv2.COLOR_BGR2Luv,
+                 'YCrCb': cv2.COLOR_BGR2YCrCb, 'XYZ': cv2.COLOR_BGR2XYZ,
+                 'Grayscale': cv2.COLOR_BGR2GRAY}
 
 
-"""Private helper functions"""
+class FilterWindow:
 
+    def __init__(self, name, image):
 
-def __set_redisplay(x):
-    """Called whenever a trackbar position is moved.
+        # general params
+        self.name = name
+        self.image = image          # displayed image; modify this
+        self._image = image.copy()  # input image; don't modify
 
-    Sets the global variable redisplay to True.
-    """
-    global redisplay
-    redisplay = True
+        # parameters for thresholding
+        self._lowerb = np.array([0, 0, 0])
+        self._upperb = np.array([255, 255, 255])
+        self.cspace = 'BGR'
+        self.mask = 255 * np.ones(image.shape[:2], dtype=np.uint8)
+        self.applied_mask = image.copy()
+        self.display_mask = False
 
+    def _initialize_window(self, cspace):
+        cv2.namedWindow(self.name)
 
-def __initialize_sliders(window_name):
-    """Initializes the trackbars"""
-    cv2.resizeWindow(window_name, 600, 25)
+        # Define trackbar names (NOTE: see known issues in README)
+        trackbar_names = ['Ch 1 min ', 'Ch 1 max', 'Ch 2 min  ',
+                          'Ch 2 max ', 'Ch 3 min ', 'Ch 3 max']
+        start_vals = [0, 255, 0, 255, 0, 255]
+        max_vals = [255, 255, 255, 255, 255, 255]
 
-    # Define trackbar names (NOTE: see known issues in README)
-    bar_start = [0, 0, 100, 0, 100, 0, 100]
-    bar_end = [7, 100, 100, 100, 100, 100, 100]
-    bars = ['Switch space', 'Ch 1 min ', 'Ch 1 max  ',
-            'Ch 2 min', 'Ch 2 max', 'Ch 3 min', 'Ch 3 max']
-    for i in range(0, 7):
-        cv2.createTrackbar(bars[i], window_name, bar_start[i], bar_end[i], __set_redisplay)
+        # lambdas used because createTrackbar only wants the handle of a single
+        # parameter function (passing the position), but want to send more info
+        cv2.createTrackbar(
+            trackbar_names[0], self.name, start_vals[0], max_vals[0],
+            lambda pos: self._update_lowerb(pos, 0))
+        cv2.createTrackbar(
+            trackbar_names[1], self.name, start_vals[1], max_vals[1],
+            lambda pos: self._update_upperb(pos, 0))
+        cv2.createTrackbar(
+            trackbar_names[2], self.name, start_vals[2], max_vals[2],
+            lambda pos: self._update_lowerb(pos, 1))
+        cv2.createTrackbar(
+            trackbar_names[3], self.name, start_vals[3], max_vals[3],
+            lambda pos: self._update_upperb(pos, 1))
+        cv2.createTrackbar(
+            trackbar_names[4], self.name, start_vals[4], max_vals[4],
+            lambda pos: self._update_lowerb(pos, 2))
+        cv2.createTrackbar(
+            trackbar_names[5], self.name, start_vals[5], max_vals[5],
+            lambda pos: self._update_upperb(pos, 2))
 
-    return bars
+    def _update_lowerb(self, pos, channel):
+        if channel == 0 and (self.cspace == 'HSV' or self.cspace == 'HLS'):
+            self._lowerb[channel] = int(179*pos/255)
+        else:
+            self._lowerb[channel] = pos
 
+        self._update_window()
 
-def __initialize_font():
-    pass
+    def _update_upperb(self, pos, channel):
+        if channel == 0 and (self.cspace == 'HSV' or self.cspace == 'HLS'):
+            self._upperb[channel] = int(179*pos/255)
+        else:
+            self._upperb[channel] = pos
 
+        self._update_window()
 
-def __multi_window(img):
-    """Display mask, applied mask, and filtering trackbars in three windows."""
+    def _update_window(self):
+        if self.cspace == 'Grayscale':
+            lowerb, upperb = int(self._lowerb[0]), int(self._upperb[0])
+            self.mask = cv2.inRange(self.image, lowerb, upperb)
+        else:
+            self.mask = cv2.inRange(self.image, self._lowerb, self._upperb)
 
-    # initialize window and trackbars
-    mask_window = "Binary mask"
-    masked_window = "Masked image"
-    slider_window = "Thresholding ranges"
-    cv2.namedWindow(mask_window, cv2.WINDOW_NORMAL)
-    cv2.namedWindow(masked_window, cv2.WINDOW_NORMAL)
-    cv2.namedWindow(slider_window, cv2.WINDOW_NORMAL)
-    sliders = __initialize_sliders(slider_window)
+        self.applied_mask = cv2.bitwise_and(
+            self._image, self._image, mask=self.mask)
 
-    # initializations
-    cspace = 0
-    mask = np.ones(img.shape[:2], dtype=np.uint8)
-    masked_img = img
-    global redisplay
+        if self.display_mask:
+            cv2.imshow(self.name, self.mask)
+        else:
+            cv2.imshow(self.name, self.applied_mask)
 
-    # display window with trackbar values that can be changed
-    print('Exit with [q] or [esc].')
-    while(True):
+    def _flip_mask_display(self):
+        self.display_mask = not self.display_mask
+        self._update_window()
+        if self.verbose:
+            if self.display_mask:
+                print('Displaying mask')
+            else:
+                print('Displaying applied mask')
 
-        # display the image
-        redisplay = False
-        cv2.imshow(mask_window, mask)
-        cv2.imshow(masked_window, masked_img)
-        k = cv2.waitKey(200) & 0xFF  # large wait time to remove freezing
-        if k == 113 or k == 27:
-            break
+    def _cspace_change(self, cspace):
+        if self.cspace not in ['HSV', 'HLS'] and cspace in ['HSV', 'HLS']:
+            # changing *into* HSV/HLS
+            self._lowerb[0] = int(179*self._lowerb[0]/255)
+            self._upperb[0] = int(179*self._upperb[0]/255)
+        elif self.cspace in ['HSV', 'HLS'] and cspace not in ['HSV', 'HLS']:
+            # changing *out of* HSV/HLS
+            self._lowerb[0] = int(255*self._lowerb[0]/179)
+            self._upperb[0] = int(255*self._upperb[0]/179)
 
-        # get positions of the sliders
-        slider_pos = [cv2.getTrackbarPos(sliders[i], slider_window)
-                      for i in range(0, 7)]
-        cspace = slider_pos.pop(0)  # take the colorspace value out
+        if cspace == 'BGR':
+            self.image = self._image
+        else:
+            self.image = cv2.cvtColor(self._image, CONVERT_CODES[cspace])
+        self.cspace = cspace
+        self._update_window()
 
-        # update threshold image
-        if redisplay:  # global variable; modified on trackbar position change
-            mask, _, _, _ = cspaceThreshImg.main(
-                img, CSPACE_LABELS[cspace], slider_pos)
-            masked_img = cv2.bitwise_and(img, img, mask=mask)
-            cv2.putText(mask, CSPACE_LABELS[cspace], *STROKE_FONT)  # outline
-            cv2.putText(mask, CSPACE_LABELS[cspace], *LABEL_FONT)   # text
+        if self.verbose:
+            print('Thresholding in', cspace)
 
-    cv2.destroyAllWindows()
+    def _print_bounds(self):
+        if self.cspace == 'Grayscale':
+            print('Lower bound:', self._lowerb[0])
+            print('Upper bound:', self._upperb[0])
+        else:
+            print('Lower bounds:', self._lowerb)
+            print('Upper bounds:', self._upperb)
 
-    return cspace, slider_pos
+    def _save(self):
 
+        if self.display_mask:
+            filename = 'mask_' + uuid.uuid1().hex + '.png'
+            cv2.imwrite(filename, self.mask)
+        else:
+            filename = 'applied_mask_' + uuid.uuid1().hex + '.png'
+            cv2.imwrite(filename, self.applied_mask)
+        if self.verbose:
+            print('Saved image as', filename)
 
-def __uni_window(img):
-    """Display mask, applied mask, and filtering trackbars in one window."""
+    def _close(self):
+        if self.verbose:
+            print('Closing window')
+            print('\n--------------------------------------')
+            print('Colorspace:', self.cspace)
+            if self.cspace == 'Grayscale':
+                print('Lower bound:', self._lowerb[0])
+                print('Upper bound:', self._upperb[0])
+            else:
+                print('Lower bounds:', self._lowerb)
+                print('Upper bounds:', self._upperb)
+            print('--------------------------------------\n')
 
-    # initialize window and trackbars
-    window = "Mask and Applied Mask with Thresholding"
-    cv2.namedWindow(window, cv2.WINDOW_NORMAL)
-    sliders = __initialize_sliders(window)
+        cv2.destroyWindow(self.name)
 
-    # initializations
-    cspace = 0
-    h, w = img.shape[:2]
-    mask = np.ones((h, w), dtype=np.uint8) * 255
-    masked_img = img
-    combo_img = np.zeros((h, 2*w, 3), dtype=np.uint8)
-    global redisplay
+    @property
+    def bounds(self):
+        if self.cspace == 'Grayscale':
+            return [self._lowerb[0], self._upperb[0]]
+        return [self._lowerb, self._upperb]
 
-    # display window with trackbar values that can be changed
-    print('Exit with [q] or [esc].')
-    while(True):
+    @property
+    def colorspace(self):
+        return self.cspace
 
-        # display the image
-        redisplay = False
+    def show(self, verbose=False):
+        # create window, trackbars, and event callbacks
+        self._initialize_window(self.cspace)
+        self.verbose = verbose
 
-        combo_img[:h, :w] = np.repeat(mask[:, :, np.newaxis], 3, axis=2)
-        combo_img[:h, w:2*w] = masked_img
-        cv2.imshow(window, combo_img)
-        k = cv2.waitKey(200) & 0xFF  # large wait time to remove freezing
-        if k == 113 or k == 27:
-            break
+        print('Press [1] thru [8] (inclusive) to switch between colorspaces')
+        if verbose:
+            print('    [1]: BGR    [2]: HSV      [3]: HLS    [4]: Lab')
+            print('    [5]: Luv    [6]: YCrCb    [7]: XYZ    [8]: Grayscale')
+        print('Press [m] to switch between displaying mask and applied mask')
+        print('Press [b] to print current lower and upper bounds')
+        print('Press [s] to save the currently displayed image')
+        print('Press [q] or [esc] to close the window')
+        print('------------------------------------------------------------\n')
+        if verbose:
+            print('Thresholding in BGR')
+            print('Displaying applied mask')
 
-        # get positions of the sliders
-        slider_pos = [cv2.getTrackbarPos(sliders[i], window)
-                      for i in range(0, 7)]
-        cspace = slider_pos.pop(0)  # take the colorspace value out
+        # display the image and wait for a keypress or trackbar change
+        cv2.imshow(self.name, self.applied_mask)
+        while(True):
 
-        # update threshold image
-        if redisplay:  # global variable; modified on trackbar position change
-            mask, _, _, _ = cspaceThreshImg.main(
-                img, CSPACE_LABELS[cspace], slider_pos)
-            masked_img = cv2.bitwise_and(img, img, mask=mask)
-            cv2.putText(mask, CSPACE_LABELS[cspace], *STROKE_FONT)  # outline
-            cv2.putText(mask, CSPACE_LABELS[cspace], *LABEL_FONT)   # text
-
-    cv2.destroyAllWindows()
-
-    return cspace, slider_pos
-
-
-"""Main public function"""
-
-
-def display(img, multi_window=False):
-    """Public function to display the image and filtering trackbars.
-
-    Parameters
-    ----------
-    img : array_like
-        image to filter/threshold.
-    multi_window: bool, optional
-        when set to True, displays image, applied mask, and trackbars
-        each in separate windows at full size; when False (default),
-        resizes the image by half until it is under 600x600 and
-        displays in a single window with trackbars on the top.
-
-    Returns
-    -------
-    mask : ndarray
-        single channel binary image, same size as input `img`, where
-        white (255) corresponds to that pixel being inside the bounds
-        defined by the trackbars, and black (0) is outside the bounds.
-    masked_img : ndarray
-        the mask applied to the input `img`
-    cspace : string
-        colorspace the mask was produced in
-    lowerb : uint8
-        three lower bound trackbar values as a list
-    upperb : uint8
-        three upper bound trackbar values as a list
-    """
-
-    h, w = img.shape[:2]
-
-    # create windows
-    if multi_window:
-        # run with full size images
-        cspace, slider_pos = __multi_window(img)
-    else:
-        # resize image until it's under 600x600
-        max_h, max_w = 600, 600
-        rsz_img = img
-        while (h > max_h) or (w > max_w):
-            rsz_img = cv2.pyrDown(rsz_img)
-            h, w = rsz_img.shape[:2]
-        cspace, slider_pos = __uni_window(rsz_img)
-
-    # return a new thresholded image, full size, without label
-    mask, cspace, lowerb, upperb = cspaceThreshImg.main(
-        img, CSPACE_LABELS[cspace], slider_pos)
-    masked_img = cv2.bitwise_and(img, img, mask=mask)
-    return mask, masked_img, cspace, lowerb, upperb
-
+            k = cv2.waitKey() & 0xFF
+            if k == ord('q') or k == 27:  # 27 is [esc]
+                self._close()
+                break
+            elif k == ord('m'):
+                self._flip_mask_display()
+            elif k == ord('b'):
+                self._print_bounds()
+            elif k == ord('s'):
+                self._save()
+            elif k in range(ord('1'), ord('9')):  # [1, 8] inclusive
+                cspace = CSPACE_LABELS[k-49]  # 1-8 are 49-57 on kbd input
+                self._cspace_change(cspace)
