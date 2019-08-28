@@ -1,4 +1,4 @@
-from colorfilters import *
+from . import *
 import cv2 as cv
 import argparse
 
@@ -8,13 +8,15 @@ choices = {
     "hls": HLSFilter,
     "lab": LabFilter,
     "luv": LuvFilter,
-    "ycrcb": YCrCbFilter,
+    "ycc": YCrCbFilter,
     "xyz": XYZFilter,
     "gray": GrayscaleFilter,
 }
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        "test color thresholding of images in different colorspaces"
+    )
     parser.add_argument("image", help="path to image")
     parser.add_argument(
         "colorspace", choices=list(choices.keys()), help="colorspace to filter in"
