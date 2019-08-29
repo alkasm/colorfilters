@@ -60,8 +60,12 @@ class _ColorspaceFilter:
         """Only calls waitKey() to draw the window.
         Image updates are drawn via imshow() in _update()."""
         self._initialize_window()
-        cv.waitKey()
-        cv.destroyWindow(self.name)
+        while True:
+            print("Press [q] or [esc] to close the window.")
+            k = cv.waitKey() & 0xFF
+            if k in (ord("q"), ord("\x1b")):
+                cv.destroyWindow(self.name)
+                break
 
 
 class BGRFilter(_ColorspaceFilter):
