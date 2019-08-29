@@ -20,7 +20,7 @@ Install into a Python virtual environment, as you would any other Python project
 ```sh
 $ python3 -m venv venv
 $ source venv/bin/activate
-(venv) $ pip install git+https://github.com/alkasm/cspaceFilterPython
+(venv) $ pip install git+https://github.com/alkasm/colorfilters
 ```
 
 Run the module as a script on any image you want:
