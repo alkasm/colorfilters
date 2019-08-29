@@ -26,7 +26,7 @@ if __name__ == "__main__":
     img = cv.imread(args.image)
     if img is None or img.size == 0:
         raise Exception(f"Unable to read image {args.image}. Please check the path.")
-    window = choices[parser.colorspace]()
+    window = choices[args.colorspace](img)
 
     window.show()
     cv.destroyAllWindows()

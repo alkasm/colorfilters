@@ -31,10 +31,20 @@ Run the module as a script on any image you want:
 
 ## Usage
 
-You can always check the `--help` flag when running the module as a script for more info:
+As a script, just run the module directly as above. You can always check the `--help` flag when running the module as a script for more info:
 
 ```sh
 (venv) $ python3 -m colorfilters --help
+usage: test color thresholding of images in different colorspaces
+       [-h] image {bgr,hsv,hls,lab,luv,ycc,xyz,gray}
+
+positional arguments:
+  image                 path to image
+  {bgr,hsv,hls,lab,luv,ycc,xyz,gray}
+                        colorspace to filter in
+
+optional arguments:
+  -h, --help            show this help message and exit
 ```
 
 Use inside your own Python projects:
@@ -48,6 +58,7 @@ Use inside your own Python projects:
 >>> window.show()
 >>> 
 >>> print(f"Image filtered in HSV between {window.lowerb} and {window.upperb}.")
+Image filtered in HSV between {window.lowerb} and {window.upperb}.
 ```
 
 The window object has a few properties you might be interested in after successfully filtering your image:
