@@ -11,7 +11,7 @@ Threshold your images in any colorspace!
 * XYZ (CIEXYZ)
 * Grayscale (single channel)
 
-![Example Image][readme-example.png]
+![Example Image](readme-example.png)
 
 ## Getting Started
 
@@ -58,7 +58,7 @@ Use inside your own Python projects:
 >>> window.show()
 >>> 
 >>> print(f"Image filtered in HSV between {window.lowerb} and {window.upperb}.")
-Image filtered in HSV between {window.lowerb} and {window.upperb}.
+Image filtered in HSV between [51, 0, 183] and [63, 255, 255].
 ```
 
 The window object has a few properties you might be interested in after successfully filtering your image:
