@@ -1,6 +1,6 @@
 # colorfilters
 
-Threshold your images in any colorspace!
+Threshold your images in OpenCV's colorspaces.
 
 * BGR (RGB)
 * HSV
@@ -15,26 +15,20 @@ Threshold your images in any colorspace!
 
 ## Getting Started
 
-Install into a Python virtual environment, as you would any other Python project.
-
 ```sh
-$ python3 -m venv venv
-$ source venv/bin/activate
-(venv) $ pip install git+https://github.com/alkasm/colorfilters
+$ pip install git+https://github.com/alkasm/colorfilters
 ```
 
-Run the module as a script on any image you want:
+Run the tool on any image you want:
 
 ```sh
-(venv) $ python3 -m colorfilters path/to/image.png hsv
+$ colorfilters path/to/image.png hsv
 ```
 
 ## Usage
 
-As a script, just run the module directly as above. You can always check the `--help` flag when running the module as a script for more info:
-
 ```sh
-(venv) $ python3 -m colorfilters --help
+$ colorfilters --help
 usage: test color thresholding of images in different colorspaces
        [-h] image {bgr,hsv,hls,lab,luv,ycc,xyz,gray}
 

@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "colorfilters"
+version = "1.1.0"
+description = "Image thresholding tool"
+authors = ["Alexander Reynolds <alex@theory.shop>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.6"
+opencv-python = "^4.5.4"
+numpy = "^1.21.3"
+
+[tool.poetry.dev-dependencies]
+black = "^21.9b0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+colorfilters = "colorfilters.app:app"
