@@ -22,13 +22,13 @@ $ pip install git+https://github.com/alkasm/colorfilters
 Run the tool on any image you want:
 
 ```sh
-$ colorfilters path/to/image.png hsv
+$ colorfilter path/to/image.png hsv
 ```
 
 ## Usage
 
 ```sh
-$ colorfilters --help
+$ colorfilter --help
 usage: test color thresholding of images in different colorspaces
        [-h] image {bgr,hsv,hls,lab,luv,ycc,xyz,gray}
 
